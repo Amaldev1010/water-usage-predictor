@@ -1,70 +1,31 @@
+from flask import Flask, request, jsonify
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from scipy import stats
-from flask import Flask, request, jsonify
-#!/usr/bin/env python3.11
-import sys
-if sys.version_info < (3, 11) or sys.version_info >= (3, 14):
-    sys.exit("This script requires Python 3.11")
+from sklearn.linear_model import LinearRegression
 
 app = Flask(__name__)
 
-# Load and preprocess data (done once at startup)
-df = pd.read_csv('Daily.csv')
-df['Average_Daily_Usage'] = df['Average_Daily_Usage'].fillna(
-    (df['Daily_Consumption'] / df['Count_Employees'].replace(0, 1))
-).round(2)
-
-df.dropna(inplace=True)
-numeric_cols = ['Daily_Consumption', 'Count_Employees', 'Average_Daily_Usage', 'total_capacity']
-df = df[(np.abs(stats.zscore(df[numeric_cols])) < 3).all(axis=1)]
-
-X = df.drop(columns=['Daily_Consumption'])
-y = df['Daily_Consumption']
-
-categorical_features = ['Industry_Name', 'Location']
-numeric_features = ['Count_Employees', 'Average_Daily_Usage', 'total_capacity']
-
-preprocessor = ColumnTransformer([
-    ('num', Pipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler())
-    ]), numeric_features),
-    ('cat', Pipeline([
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('encoder', OneHotEncoder(handle_unknown='ignore'))
-    ]), categorical_features)
-])
-
-# Train the model (done once at startup)
-model = Pipeline([
-    ('preprocessor', preprocessor),
-    ('regressor', GradientBoostingRegressor(n_estimators=200, max_depth=5, learning_rate=0.1, random_state=42))
-])
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model.fit(X_train, y_train)
+# Example model (replace with your trained model)
+model = LinearRegression()
+# Dummy data for demonstration (replace with your training data)
+X = np.array([[1000, 20.0, 50000], [2000, 30.0, 100000]])
+y = np.array([5000, 10000])
+model.fit(X, y)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        data = request.get_json()
-        input_df = pd.DataFrame([{
-            'Industry_Name': data['industryName'],
-            'Location': data['location'],
-            'Count_Employees': float(data['countEmployees']),
-            'Average_Daily_Usage': float(data['averageDailyUsage']),
-            'total_capacity': float(data['totalCapacity'])
-        }])
-        predicted_value = model.predict(input_df)[0]
-        return jsonify({'predictedDailyConsumption': round(predicted_value, 2)})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+    data = request.get_json()
+    industry_name = data.get('industryName')
+    location = data.get('location')
+    count_employees = data.get('countEmployees', 0)
+    average_daily_usage = data.get('averageDailyUsage', 0.0)
+    total_capacity = data.get('totalCapacity', 0)
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Prepare input for prediction
+    input_data = np.array([[count_employees, average_daily_usage, total_capacity]])
+    predicted_consumption = model.predict(input_data)[0]
+
+    return jsonify({"predictedDailyConsumption": float(predicted_consumption)})
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
