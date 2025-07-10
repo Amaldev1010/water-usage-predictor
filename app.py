@@ -8,6 +8,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from scipy import stats
 from flask import Flask, request, jsonify
+#!/usr/bin/env python3.11
+import sys
+if sys.version_info < (3, 11) or sys.version_info >= (3, 14):
+    sys.exit("This script requires Python 3.11")
 
 app = Flask(__name__)
 
