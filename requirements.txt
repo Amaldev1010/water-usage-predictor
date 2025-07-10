@@ -1,5 +1,7 @@
 flask==2.3.2
-pandas==2.2.2  # Latest stable version with wheel support
-numpy==1.26.4  # Latest stable version with wheel support
-scikit-learn==1.5.1  # Updated to the latest compatible version
-scipy==1.13.1  # Updated to the latest compatible version
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.1
+scipy==1.13.1
+setuptools
+wheel
